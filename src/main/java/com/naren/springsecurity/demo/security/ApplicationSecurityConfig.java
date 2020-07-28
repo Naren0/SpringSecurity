@@ -1,6 +1,7 @@
 package com.naren.springsecurity.demo.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,6 +11,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+import static com.naren.springsecurity.demo.security.ApplicationUserRole.ADMIN;
+import static com.naren.springsecurity.demo.security.ApplicationUserRole.STUDENT;
 
 @Configuration
 @EnableWebSecurity
@@ -29,6 +33,7 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/","index","/css/*","/js/*")
                 .permitAll()
+                .antMatchers("/api/**").hasRole(STUDENT.name())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -36,15 +41,21 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
+    @Bean
     protected UserDetailsService userDetailsService() {
        UserDetails narenUser =  User.builder()
                 .username("naren")
-                .password(passwordEncoder
-                        .encode("password"))
-                .roles("STUDENT") //ROLE_STUDENT
+                .password(passwordEncoder.encode("password"))
+                .roles(STUDENT.name()) //ROLE_STUDENT
                 .build();
 
-       return new InMemoryUserDetailsManager(narenUser);
+       UserDetails adminUser = User.builder()
+               .username("admin")
+               .password(passwordEncoder.encode("password123"))
+               .roles(ADMIN.name())
+               .build();
+
+       return new InMemoryUserDetailsManager(narenUser,adminUser);
 
     }
 }
